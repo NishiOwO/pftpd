@@ -8,7 +8,7 @@ include $(TOPDIR)/Platform/$(PLATFORM).mk
 
 CFLAGS += -DVERSION=\"$(VERSION)\" -DPREFIX=\"$(PREFIX)\"
 
-OBJS = main.o y.tab.o lex.yy.o
+OBJS = main.o pftpd.o y.tab.o lex.yy.o
 
 .PHONY: all clean
 .SUFFIXES: .c .o
