@@ -3,6 +3,8 @@
 %{
 #include "y.tab.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 int yywrap(void){
         return 1;
@@ -14,6 +16,8 @@ int yyerror(const char* str){
         return 0;
 }
 
+char* yytmpbuf;
+
 %}
 
 %x STR
@@ -22,16 +26,29 @@ int yyerror(const char* str){
 
 \"								{
 	BEGIN(STR);
+	yytmpbuf = malloc(1);
+	yytmpbuf[0] = 0;
 }
 
 <STR>[^\\"]*							{
+	char* old = yytmpbuf;
+	yytmpbuf = malloc(strlen(old) + strlen(yytext) + 1);
+	strcpy(yytmpbuf, old);
+	strcpy(yytmpbuf + strlen(old), yytext);
+	free(old);
 }
 
 <STR>\\.							{
+	char* old = yytmpbuf;
+	yytmpbuf = malloc(strlen(old) + 2);
+	strcpy(yytmpbuf, old);
+	strcpy(yytmpbuf + strlen(old), yytext + 1);
+	free(old);
 }
 
 <STR>\"								{
 	BEGIN(0);
+	yylval.value = yytmpbuf;
 	return STRING;
 }
 
@@ -78,6 +95,8 @@ deny-local							{
 }
 
 ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\/[0-9]{1,2})	{
+	yylval.value = malloc(strlen(yytext) + 1);
+	strcpy(yylval.value, yytext);
 	return CIDR;
 }
 

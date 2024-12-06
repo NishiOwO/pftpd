@@ -7,7 +7,11 @@ int yylex();
 int yyerror(const char*);
 %}
 
-%token CIDR NEWLINE STRING
+%union {
+	char* value;
+}
+
+%token CIDR STRING NEWLINE
 
 /* Sections */
 %token SUBNET GLOBAL
@@ -26,20 +30,30 @@ list_component	: subnet_block NEWLINE
 		| global_block NEWLINE
 		| NEWLINE;
 
-subnet_block	: SUBNET spaces CIDR spaces '{' NEWLINE directives '}'
-		| GLOBAL spaces '{' NEWLINE directives '}';
+subnet_block	: SUBNET spaces CIDR spaces '{' NEWLINE directives '}'	{
+}
+		| GLOBAL spaces '{' NEWLINE directives '}'		{
+};
 
 directives	: directive
 		| directives directive;
 
-directive	: WELCOME spaces STRING NEWLINE
-		| ROOT spaces STRING NEWLINE
-		| STOP NEWLINE
-		| PASS NEWLINE
-		| ALLOWANON NEWLINE
-		| DENYANON NEWLINE
-		| ALLOWLOCAL NEWLINE
-		| DENYLOCAL NEWLINE
+directive	: WELCOME spaces STRING NEWLINE		{
+}
+		| ROOT spaces STRING NEWLINE		{
+}
+		| STOP NEWLINE				{
+}
+		| PASS NEWLINE				{
+}
+		| ALLOWANON NEWLINE			{
+}
+		| DENYANON NEWLINE			{
+}
+		| ALLOWLOCAL NEWLINE			{
+}
+		| DENYLOCAL NEWLINE			{
+}
 		| NEWLINE;
 
 spaces		: space
