@@ -62,6 +62,10 @@ global								{
 	return GLOBAL;
 }
 
+group								{
+	return GROUP;
+}
+
 root								{
 	return ROOT;
 }
