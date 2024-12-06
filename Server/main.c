@@ -5,6 +5,9 @@
 
 const char* conf = PREFIX "/etc/pftpd.conf";
 
+int yyparse(void);
+extern FILE* yyin;
+
 int main(int argc, char** argv){
 	int i;
 	printf("pftpd/%s\n", VERSION);
@@ -25,5 +28,12 @@ int main(int argc, char** argv){
 			}
 		}
 	}
+	yyin = fopen(conf, "r");
+	if(yyin == NULL){
+		fprintf(stderr, "Could not open the config file\n");
+		return 1;
+	}
 	printf("Parsing %s\n", conf);
+	if(yyparse() != 0) return 1;
+	fclose(yyin);
 }
