@@ -84,5 +84,41 @@ int pftpd_add_host(const char* host){
 }
 
 int pftpd_server(void){
+#ifdef USE_POLL
+	struct pollfd* pollfds = malloc(sizeof(*pollfds) * server_entries);
+	int i;
+	for(i = 0; i < server_entries; i++){
+		pollfds[i].fd = server_sockets[i];
+		pollfds[i].events = POLLIN | POLLPRI;
+	}
+#endif
+	while(1){
+		int ret;
+#ifdef USE_POLL
+		ret = poll(pollfds, server_entries, 1000);
+#endif
+		if(ret == -1){
+			return 1;
+		}else if(ret == 0){
+		}else if(ret > 0){
+			for(i = 0; i < server_entries; i++){
+				int conn = 0;
+#ifdef USE_POLL
+				if(pollfds[i].revents & POLLIN) conn = 1;
+#endif
+				if(conn){
+					struct sockaddr_in claddr;
+					int clen = sizeof(claddr);
+					int sock = accept(server_sockets[i], (struct sockaddr*)&claddr, &clen);
+					pid_t pid = fork();
+					if(pid == 0){
+						_exit(0);
+					}else{
+						CLOSE_SOCKET(sock);
+					}
+				}
+			}
+		}
+	}
 	return 0;
 }
