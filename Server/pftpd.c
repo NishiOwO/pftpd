@@ -6,7 +6,7 @@
 #include <stddef.h>
 
 int sec_count = 0;
-pftpd_entry_t* sec_entries[128];
+pftpd_entry_t** sec_entries = NULL;
 
 pftpd_sec_t* pftpd_create_section(void){
 	pftpd_sec_t* sec = malloc(sizeof(*sec));

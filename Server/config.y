@@ -4,12 +4,14 @@
 #include "pftpd.h"
 #include "y.tab.h"
 
+#include <stdlib.h>
+#include <string.h>
 #include <stddef.h>
 
 pftpd_sec_t* sec = NULL;
 
 extern int sec_count;
-extern pftpd_entry_t* sec_entries;
+extern pftpd_entry_t** sec_entries;
 
 int yylex();
 int yyerror(const char*);
@@ -113,5 +115,19 @@ space		: ' '
 %%
 
 void add_group(const char* str, pftpd_sec_t* section){
-	printf("%s\n", str);
+	if(sec_entries == NULL){
+		sec_entries = malloc(sizeof(*sec_entries));
+		sec_entries[0] = malloc(sizeof(**sec_entries));
+	}else{
+		pftpd_entry_t** old = sec_entries;
+		sec_entries = malloc(sizeof(*sec_entries) * (sec_count + 1));
+		int i;
+		for(i = 0; i < sec_count; i++) sec_entries[i] = old[i];
+		free(old);
+		sec_entries[sec_count] = malloc(sizeof(**sec_entries));
+	}
+	sec_entries[sec_count]->name = malloc(strlen(str) + 1);
+	strcpy(sec_entries[sec_count]->name, str);
+	sec_entries[sec_count]->section = section;
+	sec_count++;
 }

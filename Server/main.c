@@ -1,5 +1,7 @@
 /* $Id$ */
 
+#include "pftpd.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -28,12 +30,15 @@ int main(int argc, char** argv){
 			}
 		}
 	}
+	printf("Parsing %s\n", conf);
 	yyin = fopen(conf, "r");
 	if(yyin == NULL){
 		fprintf(stderr, "Could not open the config file\n");
 		return 1;
 	}
-	printf("Parsing %s\n", conf);
 	if(yyparse() != 0) return 1;
 	fclose(yyin);
+	if(pftpd_init_user() != 0) return 1;
+	printf("%s\n", pftpd_find_user(0));
+	printf("Server starting\n");
 }
