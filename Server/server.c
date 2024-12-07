@@ -83,6 +83,9 @@ int pftpd_add_host(const char* host){
 	free(cp);
 }
 
+void pftpd_handle_socket(int sock, pftpd_state_t* state){
+}
+
 int pftpd_server(void){
 #ifdef USE_POLL
 	struct pollfd* pollfds = malloc(sizeof(*pollfds) * server_entries);
@@ -112,6 +115,7 @@ int pftpd_server(void){
 					int sock = accept(server_sockets[i], (struct sockaddr*)&claddr, &clen);
 					pid_t pid = fork();
 					if(pid == 0){
+						pftpd_handle_socket(sock, NULL);
 						_exit(0);
 					}else{
 						CLOSE_SOCKET(sock);

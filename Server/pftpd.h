@@ -18,6 +18,10 @@ typedef struct pftpd_entry {
 	pftpd_sec_t* section;
 } pftpd_entry_t;
 
+typedef struct pftpd_state {
+	pftpd_sec_t* section;
+} pftpd_state_t;
+
 /* pftpd.c */
 
 pftpd_sec_t* pftpd_create_section(void);
