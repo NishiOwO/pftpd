@@ -98,10 +98,20 @@ deny-local							{
 	return DENYLOCAL;
 }
 
+listen								{
+	return LISTEN;
+}
+
 ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\/[0-9]{1,2})	{
 	yylval.value = malloc(strlen(yytext) + 1);
 	strcpy(yylval.value, yytext);
 	return CIDR;
+}
+
+([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]{1,5})	{
+	yylval.value = malloc(strlen(yytext) + 1);
+	strcpy(yylval.value, yytext);
+	return HOST;
 }
 
 ([ \t]*\n[ \t]*)						{

@@ -22,13 +22,13 @@ void add_group(const char* str, pftpd_sec_t* section);
 	char* value;
 }
 
-%token CIDR STRING NEWLINE
+%token CIDR HOST STRING NEWLINE
 
 /* Sections */
 %token SUBNET GLOBAL GROUP
 
 /* Directives */
-%token WELCOME ROOT STOP PASS ALLOWANON DENYANON ALLOWLOCAL DENYLOCAL
+%token WELCOME ROOT STOP PASS ALLOWANON DENYANON ALLOWLOCAL DENYLOCAL LISTEN
 
 %start list
 
@@ -39,6 +39,8 @@ list		: list_component
 
 list_component	: subnet_block NEWLINE
 		| global_block NEWLINE
+		| LISTEN spaces HOST NEWLINE {
+}
 		| NEWLINE;
 
 subnet_block	: SUBNET spaces CIDR spaces '{' NEWLINE directives '}'		{
