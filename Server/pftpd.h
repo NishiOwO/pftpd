@@ -27,4 +27,9 @@ pftpd_sec_t* pftpd_create_section(void);
 int pftpd_init_user(void);
 char* pftpd_find_user(int uid);
 
+/* server.c */
+
+int pftpd_server_init(void);
+int pftpd_server(void);
+
 #endif

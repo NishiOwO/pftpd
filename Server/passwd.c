@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
-char* pwdbuf;
+char* pwdbuf = NULL;
 
 int pftpd_init_user(void){
 	struct stat s;
@@ -17,6 +17,7 @@ int pftpd_init_user(void){
 		return 1;
 	}
 	stat("/etc/passwd", &s);
+	if(pwdbuf != NULL) free(pwdbuf);
 	pwdbuf = malloc(s.st_size + 1);
 	fread(pwdbuf, s.st_size, 1, fpwd);
 	pwdbuf[s.st_size] = 0;

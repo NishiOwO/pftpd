@@ -4,11 +4,16 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
 
 const char* conf = PREFIX "/etc/pftpd.conf";
 
 int yyparse(void);
 extern FILE* yyin;
+
+void rehash_user(int sig){
+	pftpd_init_user();
+}
 
 int main(int argc, char** argv){
 	int i;
@@ -39,6 +44,7 @@ int main(int argc, char** argv){
 	if(yyparse() != 0) return 1;
 	fclose(yyin);
 	if(pftpd_init_user() != 0) return 1;
-	printf("%s\n", pftpd_find_user(0));
-	printf("Server starting\n");
+	signal(SIGHUP, rehash_user);
+	if(pftpd_server_init() != 0) return 1;
+	if(pftpd_server() != 0) return 1;
 }
