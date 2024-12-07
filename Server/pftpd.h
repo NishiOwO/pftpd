@@ -31,5 +31,6 @@ char* pftpd_find_user(int uid);
 
 int pftpd_server_init(void);
 int pftpd_server(void);
+int pftpd_add_host(const char* host);
 
 #endif

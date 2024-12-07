@@ -40,6 +40,7 @@ list		: list_component
 list_component	: subnet_block NEWLINE
 		| global_block NEWLINE
 		| LISTEN spaces HOST NEWLINE {
+	pftpd_add_host($<value>3);
 }
 		| NEWLINE;
 
