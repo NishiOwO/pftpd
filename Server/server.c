@@ -1,11 +1,21 @@
 /* $Id$ */
 
+#define USE_POLL
+
 #include "pftpd.h"
 
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+
+#ifdef USE_POLL
+#include <sys/poll.h>
+#endif
+
+#ifdef USE_SELECT
+#include <sys/select.h>
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
