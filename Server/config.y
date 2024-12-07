@@ -46,8 +46,8 @@ list_component	: subnet_block NEWLINE
 
 subnet_block	: SUBNET spaces CIDR spaces '{' NEWLINE directives '}'		{
 	char* str = malloc(1 + strlen($<value>3) + 1);
-	str[0] = 0;
-	strcat(str, "*");
+	str[0] = SYMBOL_SUBNET;
+	str[1] = 0;
 	strcat(str, $<value>3);
 	add_group(str, sec);
 	sec = NULL;
@@ -61,8 +61,8 @@ subnet_block	: SUBNET spaces CIDR spaces '{' NEWLINE directives '}'		{
 }
 		| GROUP spaces STRING spaces '{' NEWLINE directives '}'		{
 	char* str = malloc(1 + strlen($<value>3) + 1);
-	str[0] = 0;
-	strcat(str, "@");
+	str[0] = SYMBOL_GROUP;
+	str[1] = 0;
 	strcat(str, $<value>3);
 	add_group(str, sec);
 	sec = NULL;
