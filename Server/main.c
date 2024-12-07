@@ -45,6 +45,7 @@ int main(int argc, char** argv){
 	fclose(yyin);
 	if(pftpd_init_user() != 0) return 1;
 	signal(SIGHUP, rehash_user);
+	printf("Server starting\n");
 	if(pftpd_server_init() != 0) return 1;
 	if(pftpd_server() != 0) return 1;
 }

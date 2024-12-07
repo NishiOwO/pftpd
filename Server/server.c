@@ -64,6 +64,7 @@ int pftpd_add_host(const char* host){
 	for(i = 0; cp[i] != 0; i++){
 		if(cp[i] == ':'){
 			cp[i] = 0;
+			printf("Listening to %s:%s\n", strlen(cp) > 0 ? cp : "0.0.0.0", cp + i + 1);
 			server_addresses[server_entries].sin_addr.s_addr = inet_addr(strlen(cp) > 0 ? cp : "0.0.0.0");
 			server_ports[server_entries] = atoi(cp + i + 1);
 			server_entries++;
