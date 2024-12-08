@@ -48,5 +48,6 @@ int main(int argc, char** argv){
 	signal(SIGCHLD, SIG_IGN);
 	printf("Server starting\n");
 	if(pftpd_server_init() != 0) return 1;
+	printf("Server started\n");
 	if(pftpd_server() != 0) return 1;
 }
