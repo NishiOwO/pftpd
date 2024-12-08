@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <signal.h>
+#include <unistd.h>
 
 const char* conf = PREFIX "/etc/pftpd.conf";
 
@@ -41,6 +42,18 @@ int main(int argc, char** argv){
 				return 1;
 			}
 		}
+	}
+	if(getuid() != 0){
+		printf("Program is not running as root, attempting to setuid\n");
+		if(setuid(0) != 0){
+			fprintf(stderr, "Could not setuid, run me as root or set setuid flag + set owner to root\n");
+			return 1;
+		}
+		if(seteuid(0) != 0){
+			fprintf(stderr, "Could not seteuid, run me as root or set setuid flag + set owner to root\n");
+			return 1;
+		}
+		printf("Switched to root user successfully\n");
 	}
 	printf("Parsing %s\n", conf);
 	yyin = fopen(conf, "r");

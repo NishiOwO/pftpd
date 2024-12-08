@@ -6,6 +6,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <unistd.h>
+
+#ifdef __linux__
+#include <shadow.h>
+#include <crypt.h>
+#endif
 
 char* pwdbuf = NULL;
 
