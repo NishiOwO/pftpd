@@ -74,6 +74,29 @@ int pftpd_add_host(const char* host){
 	free(cp);
 }
 
+int pftpd_timeout(int sock){
+#ifdef USE_POLL
+	struct pollfd* pollfds = malloc(sizeof(*pollfds));
+	int ret;
+	pollfds[0].fd = sock;
+	pollfds[0].events = POLLIN | POLLPRI;
+	ret = poll(pollfds, 1, 30000);
+	free(pollfds);
+	return ret;
+#endif
+#ifdef USE_SELECT
+	fd_set fdset;
+	struct timeval tv;
+	int ret;
+	tv.tv_sec = 30;
+	tv.tv_usec = 0;
+	FD_ZERO(&fdset);
+	FD_SET(sock, &fdset);
+	ret = select(FD_SETSIZE, &fdset, NULL, NULL, &tv);
+	return ret;
+#endif
+}
+
 int pftpd_write(int sock, int status, const char* message){
 	int i;
 	int incr = 0;
@@ -92,9 +115,41 @@ int pftpd_write(int sock, int status, const char* message){
 	return 0;
 }
 
+int pftpd_read(int sock, char** message){
+	char buf[2];
+	buf[1] = 0;
+	*message = malloc(1);
+	*message[0] = 0;
+	while(1){
+		char* old;
+		if(pftpd_timeout(sock) <= 0){
+			free(*message);
+			*message = NULL;
+			return -1;
+		}
+		if(recv(sock, buf, 1, 0) <= 0){
+			free(*message);
+			*message = NULL;
+			return -1;
+		}
+		old = *message;
+		*message = malloc(strlen(old) + 2);
+		strcpy(*message, old);
+		strcat(*message, buf);
+		free(old);
+		if(strlen(*message) >= 2 && (*message)[strlen(*message) - 1] == '\n' && (*message)[strlen(*message) - 2] == '\r'){
+			(*message)[strlen(*message) - 2] = 0;
+			break;
+		}
+	}
+	return 0;
+}
+
 #define PFTPD_WRITE(code,msg) if(pftpd_write(sock, code, msg) != 0) return
+#define PFTPD_READ(msg) if(pftpd_read(sock, &msg) != 0) return
 
 void pftpd_handle_socket(int sock, pftpd_state_t* state){
+	char* msg = NULL;
 	if(state->section->welcome == NULL){
 		char welcome[512];
 		sprintf(welcome, "pftpd/%s ready (anonymous login %s, local user login %s)", VERSION, state->section->allow_anon ? "allowed" : "not allowed", state->section->allow_local ? "allowed" : "not allowed");
@@ -114,6 +169,10 @@ void pftpd_handle_socket(int sock, pftpd_state_t* state){
 		PFTPD_WRITE(FTP_READY, buff);
 		free(buff);
 		fclose(f);
+	}
+	while(1){
+		if(msg != NULL) free(msg);
+		PFTPD_READ(msg);
 	}
 }
 
