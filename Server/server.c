@@ -150,6 +150,8 @@ int pftpd_read(int sock, char** message){
 
 void pftpd_handle_socket(int sock, pftpd_state_t* state){
 	char* msg = NULL;
+	char* login = NULL;
+	int logged_in = 0;
 	if(state->section->welcome == NULL){
 		char welcome[512];
 		sprintf(welcome, "pftpd/%s ready (anonymous login %s, local user login %s)", VERSION, state->section->allow_anon ? "allowed" : "not allowed", state->section->allow_local ? "allowed" : "not allowed");
@@ -171,8 +173,73 @@ void pftpd_handle_socket(int sock, pftpd_state_t* state){
 		fclose(f);
 	}
 	while(1){
+		char* cmd = NULL;
+		char* arg = NULL;
+		int i;
 		if(msg != NULL) free(msg);
 		PFTPD_READ(msg);
+		cmd = msg;
+		for(i = 0; msg[i] != 0; i++){
+			if(msg[i] == ' '){
+				msg[i] = 0;
+				arg = msg + i + 1;
+				break;
+			}
+		}
+		if(strcmp(cmd, "USER") == 0){
+			if(arg == NULL){
+				PFTPD_WRITE(FTP_SYNTAX_ERROR_CMD, "USER command requires a parameter");
+			}else if(login != NULL){
+				PFTPD_WRITE(FTP_BAD_SEQUENCE, "Cannot switch user");
+			}else if(strcmp(arg, "ftp") == 0 || strcmp(arg, "anonymous") == 0){
+				if(state->section->allow_anon){
+					PFTPD_WRITE(FTP_USERNAME_OK, "Anonymous login OK, send your name as password");
+					login = malloc(strlen(arg) + 1);
+					strcpy(login, arg);
+				}else{
+					PFTPD_WRITE(FTP_NOT_LOGGED_IN, "Anonymous login not allowed");
+				}
+			}else{
+				if(state->section->allow_local){
+					PFTPD_WRITE(FTP_USERNAME_OK, "Local user login OK, send your password");
+					login = malloc(strlen(arg) + 1);
+					strcpy(login, arg);
+				}else{
+					PFTPD_WRITE(FTP_NOT_LOGGED_IN, "Local user login not allowed");
+				}
+			}
+		}else if(strcmp(cmd, "PASS") == 0){
+			if(arg == NULL){
+				PFTPD_WRITE(FTP_SYNTAX_ERROR_CMD, "PASS command requires a parameter");
+			}else if(logged_in == 1){
+				PFTPD_WRITE(FTP_BAD_SEQUENCE, "Cannot switch user");
+			}else if(login == NULL){
+				PFTPD_WRITE(FTP_BAD_SEQUENCE, "Send username first");
+			}else if(strcmp(login, "ftp") == 0 || strcmp(login, "anonymous") == 0){
+				PFTPD_WRITE(FTP_LOGIN_SUCCESS, "Login successful");
+				logged_in = 1;
+			}else{
+				if(pftpd_validate_password(login, arg) == 0){
+					PFTPD_WRITE(FTP_LOGIN_SUCCESS, "Login successful");
+					logged_in = 1;
+				}else{
+					PFTPD_WRITE(FTP_NOT_LOGGED_IN, "Login incorrect");
+					free(login);
+					login = NULL;
+				}
+			}
+		}else if(strcmp(cmd, "QUIT") == 0){
+			PFTPD_WRITE(FTP_LOGOUT, "Sayonara");
+		}else if(logged_in == 0){
+			PFTPD_WRITE(FTP_NOT_LOGGED_IN, "Login first");
+		}else if(strcmp(cmd, "SYST") == 0){
+			PFTPD_WRITE(FTP_NAME, "UNIX");
+		}else if(strcmp(cmd, "PASV") == 0){
+			PFTPD_WRITE(FTP_ENTER_PASSIVE, "Entering passive mode ()");
+		}else{
+			PFTPD_WRITE(FTP_SYNTAX_ERROR_CMD, "Unknown command");
+			printf("Unknown command: `%s%s%s'\n", cmd, arg == NULL ? "" : " ", arg == NULL ? "" : arg);
+		}
 	}
 }
 
