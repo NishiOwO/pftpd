@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <pwd.h>
 
 #ifdef __linux__
 #include <shadow.h>
@@ -29,6 +30,20 @@ int pftpd_init_user(void){
 	pwdbuf[s.st_size] = 0;
 	fclose(fpwd);
 	return 0;
+}
+
+int pftpd_validate_password(const char* user, const char* password){
+#ifdef __linux__
+	struct spwd* s = getspnam(user);
+	if(s == NULL) return -1;
+	if(strcmp(s->sp_pwdp, crypt(password, s->sp_pwdp)) == 0) return 0;
+	return -1;
+#else
+	struct passwd* p = getpwnam(user);
+	if(p == NULL) return -1;
+	if(strcmp(p->pw_passwd, crypt(password, p->pw_passwd)) == 0) return 0;
+	return -1;
+#endif
 }
 
 char* pftpd_find_user(int uid){

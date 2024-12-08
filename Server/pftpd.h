@@ -92,6 +92,7 @@ void pftpd_apply_rule(pftpd_state_t* state, struct sockaddr_in claddr, pftpd_ent
 /* passwd.c */
 
 int pftpd_init_user(void);
+int pftpd_validate_password(const char* user, const char* password);
 char* pftpd_find_user(int uid);
 
 /* server.c */
