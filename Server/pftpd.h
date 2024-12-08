@@ -3,6 +3,8 @@
 #ifndef __PFTPD_H__
 #define __PFTPD_H__
 
+#define USE_POLL
+
 #ifdef INCLUDE_NET
 #include <sys/socket.h>
 #include <arpa/inet.h>

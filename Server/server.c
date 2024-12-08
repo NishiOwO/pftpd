@@ -1,7 +1,6 @@
 /* $Id$ */
 
 #define INCLUDE_NET
-#define USE_POLL
 
 #include "pftpd.h"
 
@@ -134,18 +133,31 @@ void pftpd_process_state(pftpd_state_t* state, struct sockaddr_in claddr){
 }
 
 int pftpd_server(void){
+	int i;
 #ifdef USE_POLL
 	struct pollfd* pollfds = malloc(sizeof(*pollfds) * server_entries);
-	int i;
 	for(i = 0; i < server_entries; i++){
 		pollfds[i].fd = server_sockets[i];
 		pollfds[i].events = POLLIN | POLLPRI;
 	}
 #endif
+#ifdef USE_SELECT
+	fd_set fdset;
+	struct timeval tv;
+#endif
 	while(1){
 		int ret;
 #ifdef USE_POLL
 		ret = poll(pollfds, server_entries, 1000);
+#endif
+#ifdef USE_SELECT
+		FD_ZERO(&fdset);
+		for(i = 0; i < server_entries; i++){
+			FD_SET(server_sockets[i], &fdset);
+		}
+		tv.tv_sec = 1;
+		tv.tv_usec = 0;
+		ret = select(FD_SETSIZE, &fdset, NULL, NULL, &tv);
 #endif
 		if(ret == -1){
 			return 1;
@@ -155,6 +167,9 @@ int pftpd_server(void){
 				int conn = 0;
 #ifdef USE_POLL
 				if(pollfds[i].revents & POLLIN) conn = 1;
+#endif
+#ifdef USE_SELECT
+				if(FD_ISSET(server_sockets[i], &fdset)) conn = 1;
 #endif
 				if(conn){
 					struct sockaddr_in claddr;

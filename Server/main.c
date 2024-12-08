@@ -17,7 +17,14 @@ void rehash_user(int sig){
 
 int main(int argc, char** argv){
 	int i;
-	printf("pftpd/%s\n", VERSION);
+	printf("pftpd/%s (using %s)\n", VERSION,
+#ifdef USE_POLL
+		"poll"
+#endif
+#ifdef USE_SELECT
+		"select"
+#endif
+	);
 	printf("Under public domain, original by Nishi, 2024.\n");
 	for(i = 1; i < argc; i++){
 		if(argv[i][0] == '-'){
