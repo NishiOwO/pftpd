@@ -9,6 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <pwd.h>
 
 extern int sec_count;
 extern pftpd_entry_t** sec_entries;
@@ -211,7 +212,7 @@ void pftpd_handle_socket(int sock, pftpd_state_t* state){
 		}else if(strcmp(cmd, "PASS") == 0){
 			if(arg == NULL){
 				PFTPD_WRITE(FTP_SYNTAX_ERROR_CMD, "PASS command requires a parameter");
-			}else if(logged_in == 1){
+			}else if(logged_in){
 				PFTPD_WRITE(FTP_BAD_SEQUENCE, "Cannot switch user");
 			}else if(login == NULL){
 				PFTPD_WRITE(FTP_BAD_SEQUENCE, "Send username first");
@@ -226,6 +227,31 @@ void pftpd_handle_socket(int sock, pftpd_state_t* state){
 					PFTPD_WRITE(FTP_NOT_LOGGED_IN, "Login incorrect");
 					free(login);
 					login = NULL;
+				}
+			}
+			if(logged_in){
+				struct passwd* p = getpwnam(login);
+				if(state->section->root == NULL){
+					PFTPD_WRITE(FTP_NOT_LOGGED_IN, "root is not set");
+					return;
+				}
+				if(chdir(state->section->root) != 0){
+					PFTPD_WRITE(FTP_NOT_LOGGED_IN, "failed to chdir");
+					return;
+				}
+				if(chroot(".") != 0){
+					PFTPD_WRITE(FTP_NOT_LOGGED_IN, "failed to chroot");
+					return;
+				}
+				if(strcmp(login, "ftp") != 0 && strcmp(login, "anonymous") != 0){
+					if(setuid(p->pw_uid) != 0){
+						PFTPD_WRITE(FTP_NOT_LOGGED_IN, "failed to setuid");
+						return;
+					}
+					if(seteuid(p->pw_uid) != 0){
+						PFTPD_WRITE(FTP_NOT_LOGGED_IN, "failed to seteuid");
+						return;
+					}
 				}
 			}
 		}else if(strcmp(cmd, "QUIT") == 0){
