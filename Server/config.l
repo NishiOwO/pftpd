@@ -102,10 +102,20 @@ listen								{
 	return LISTEN;
 }
 
+passive-address							{
+	return PASVADDR;
+}
+
 ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\/[0-9]{1,2})	{
 	yylval.value = malloc(strlen(yytext) + 1);
 	strcpy(yylval.value, yytext);
 	return CIDR;
+}
+
+([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]{1,5}-[0-9]{1,5})	{
+	yylval.value = malloc(strlen(yytext) + 1);
+	strcpy(yylval.value, yytext);
+	return PORTRANGE;
 }
 
 ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]{1,5})	{

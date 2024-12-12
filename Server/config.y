@@ -22,13 +22,13 @@ void add_group(const char* str, pftpd_sec_t* section);
 	char* value;
 }
 
-%token CIDR HOST STRING NEWLINE
+%token CIDR HOST PORTRANGE STRING NEWLINE
 
 /* Sections */
 %token SUBNET GLOBAL GROUP
 
 /* Directives */
-%token WELCOME ROOT STOP PASS ALLOWANON DENYANON ALLOWLOCAL DENYLOCAL LISTEN
+%token WELCOME ROOT STOP PASS ALLOWANON DENYANON ALLOWLOCAL DENYLOCAL LISTEN PASVADDR
 
 %start list
 
@@ -109,6 +109,10 @@ directive	: WELCOME spaces STRING NEWLINE		{
 		| DENYLOCAL NEWLINE			{
 	if(sec == NULL) sec = pftpd_create_section();
 	sec->allow_local = 0;
+}
+		| PASVADDR spaces PORTRANGE NEWLINE	{
+	if(sec == NULL) sec = pftpd_create_section();
+	sec->pasvaddr = $<value>3;
 }
 		| NEWLINE;
 

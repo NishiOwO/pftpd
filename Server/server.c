@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <pwd.h>
+#include <limits.h>
 
 extern int sec_count;
 extern pftpd_entry_t** sec_entries;
@@ -261,7 +262,52 @@ void pftpd_handle_socket(int sock, pftpd_state_t* state){
 		}else if(strcmp(cmd, "SYST") == 0){
 			PFTPD_WRITE(FTP_NAME, "UNIX");
 		}else if(strcmp(cmd, "PASV") == 0){
-			PFTPD_WRITE(FTP_ENTER_PASSIVE, "Entering passive mode ()");
+			if(state->section->pasvaddr != NULL){
+				char buf[1024];
+				char pasv[512];
+				in_addr_t addr;
+				int minport;
+				int maxport = 65536;
+				int port = 64;
+				unsigned char* ipv4;
+				int i;
+				strcpy(buf, state->section->pasvaddr);
+				for(i = 0; buf[i] != 0; i++){
+					if(buf[i] == ':'){
+						buf[i] = 0;
+						addr = inet_addr(buf);
+
+						break;
+					}
+				}
+				ipv4 = (unsigned char*)&addr;
+				sprintf(pasv, "Entering passive mode (%d,%d,%d,%d,%d,%d)", ipv4[0], ipv4[1], ipv4[2], ipv4[3], (port >> 8) & 0xff, (port) & 0xff);
+				PFTPD_WRITE(FTP_ENTER_PASSIVE, pasv);
+			}else{
+				PFTPD_WRITE(FTP_SYNTAX_ERROR_CMD, "Passive address not set");
+			}
+		}else if(strcmp(cmd, "EPSV") == 0){
+			if(state->section->pasvaddr == NULL){
+				char pasv[512];
+				sprintf(pasv, "Entering extended passive mode (|||%d|)", 0);
+				PFTPD_WRITE(FTP_ENTER_EXT_PASSIVE, pasv);
+			}else{
+				PFTPD_WRITE(FTP_SYNTAX_ERROR_CMD, "Passive address not set");
+			}
+		}else if(strcmp(cmd, "PWD") == 0){
+			char path[PATH_MAX + 1];
+			char* msg;
+			getcwd(path, PATH_MAX);
+			msg = malloc(1 + strlen(path) + 1 + strlen(" is the current directory") + 1);
+			msg[0] = 0;
+			strcat(msg, "\"");
+			strcat(msg, path);
+			strcat(msg, "\" is the current directory");
+			PFTPD_WRITE(FTP_CREATED, msg);
+		}else if(strcmp(cmd, "FEAT") == 0){
+			PFTPD_WRITE(FTP_FILE_NOT_FOUND, "Permission denied");
+		}else if(strcmp(cmd, "HELP") == 0){
+			PFTPD_WRITE(FTP_HELP, "The following commands are cognized\nCDUP CWD DELE EPSV FEAT HELP LIST PASS PASV QUIT RETR USER\nHelp OK");
 		}else{
 			PFTPD_WRITE(FTP_SYNTAX_ERROR_CMD, "Unknown command");
 			printf("Unknown command: `%s%s%s'\n", cmd, arg == NULL ? "" : " ", arg == NULL ? "" : arg);

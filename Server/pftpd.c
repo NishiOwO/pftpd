@@ -16,6 +16,7 @@ pftpd_sec_t* pftpd_create_section(void){
 	sec->welcome = NULL;
 	sec->root = NULL;
 	sec->group = NULL;
+	sec->pasvaddr = NULL;
 	sec->pass = 1;
 	sec->allow_anon = -1;
 	sec->allow_local = -1;
@@ -66,6 +67,7 @@ void pftpd_apply_rule(pftpd_state_t* state, struct sockaddr_in claddr, pftpd_ent
 		if(entry->section->welcome != NULL) state->section->welcome = entry->section->welcome;
 		if(entry->section->root != NULL) state->section->root = entry->section->root;
 		if(entry->section->group != NULL) state->section->group = entry->section->group;
+		if(entry->section->pasvaddr != NULL) state->section->pasvaddr = entry->section->pasvaddr;
 		if(entry->section->allow_anon != -1) state->section->allow_anon = entry->section->allow_anon;
 		if(entry->section->allow_local != -1) state->section->allow_local = entry->section->allow_local;
 		state->section->pass = entry->section->pass;

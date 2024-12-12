@@ -36,6 +36,7 @@ enum FTP_CODES {
 	FTP_DATA_OPEN		= 225,
 	FTP_DATA_SUCCES,
 	FTP_ENTER_PASSIVE,
+	FTP_ENTER_EXT_PASSIVE	= 229,
 	FTP_LOGIN_SUCCESS	= 230,
 	FTP_ACTION_OK		= 250,
 	FTP_CREATED		= 257,
@@ -68,6 +69,7 @@ typedef struct pftpd_section {
 	char* welcome;
 	char* root;
 	char* group;
+	char* pasvaddr;
 	int pass;
 	int allow_anon;
 	int allow_local;
